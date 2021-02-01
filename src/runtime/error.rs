@@ -25,7 +25,7 @@ impl Error {
 		})
 	}
 
-	pub fn call(self: Rc<Self>, args: Queue) -> Funct {
+	pub fn call(self: Rc<Self>, args: Rc<Queue>) -> Funct {
 		Funct::Error(self.wrap(format!("called with args {:?}", args)))
 	}
 }

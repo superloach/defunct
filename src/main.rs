@@ -1,62 +1,60 @@
 use std::env;
-use std::io::{stdin, Read};
+use std::io::stdin;
 
 mod interp;
 mod parser;
 mod runtime;
+mod stdlib;
 
 use interp::Interp;
+use parser::Parser;
 use runtime::block::Block;
 use runtime::funct::Funct;
-use runtime::lib::Lib;
-use runtime::native::Native;
 use runtime::queue::Queue;
-use runtime::text::Text;
 use runtime::under::Under;
 
 fn main() {
-	let stdlib = Lib::new()
-		.add("foo", Funct::text("bar"))
-		.add_native(Native::new("print", &|_under, args| {
-			println!("print {:#?}", args);
-			Funct::Zilch
-		}));
+	let std = stdlib::new();
 
-	let under = Under::new(stdlib);
+	let args = Queue::new();
+	for arg in env::args().skip(1) {
+		args.0.borrow_mut().push(Funct::text(arg));
+	}
+
+	let under = Under::new(std, args);
 	dbg!(&under);
 
-	let mut code = String::new();
+	loop {
+		let mut code = String::new();
+		match stdin().read_line(&mut code) {
+			Ok(0) => {
+				dbg!("eof");
+				return;
+			}
+			Ok(_) => {
+				dbg!(&code);
 
-	match stdin().read_to_string(&mut code) {
-		Ok(_) => {
-			dbg!(&code);
+				let mut p = Parser::new(&code);
 
-			let mut p = parser::Parser::new(&code);
+				match p.parse_block() {
+					Ok(block) => {
+						dbg!(&block);
 
-			match p.parse() {
-				Ok(block) => {
-					dbg!(&block);
+						let prgm = Block::interp(block);
+						dbg!(&prgm);
 
-					let prgm = Block::interp(block);
-					dbg!(&prgm);
-
-					let mut args = Queue(Vec::new());
-					for arg in env::args().skip(1) {
-						args.0.push(Funct::text(arg));
+						let result = prgm.call(under.clone());
+						dbg!(&result);
 					}
-					dbg!(&args);
+					Err(error) => {
+						println!("{}", code);
+						println!("{}^", " ".repeat(p.index));
 
-					let result = prgm.call(under, args);
-					dbg!(&result);
-				}
-				Err(error) => {
-					println!("{}", code);
-					println!("{}^", " ".repeat(p.index));
-
-					panic!("error: {:#?}", error)
+						panic!("error: {:#?}", error)
+					}
 				}
 			}
+			Err(e) => panic!("reading code: {:#?}", e),
 		}
-		Err(e) => panic!("reading code: {:#?}", e),
 	}
 }

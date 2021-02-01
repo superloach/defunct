@@ -5,7 +5,7 @@ use crate::runtime::funct::Funct;
 use crate::runtime::queue::Queue;
 use crate::runtime::under::Under;
 
-pub type CallFn = dyn Fn(Rc<Under>, Queue) -> Funct;
+pub type CallFn = dyn Fn(Rc<Under>, Rc<Queue>) -> Funct;
 
 pub struct Native {
 	pub name: &'static str,
@@ -17,7 +17,7 @@ impl Native {
 		Rc::new(Self { name, call_fn })
 	}
 
-	pub fn call(self: Rc<Self>, under: Rc<Under>, args: Queue) -> Funct {
+	pub fn call(self: Rc<Self>, under: Rc<Under>, args: Rc<Queue>) -> Funct {
 		(self.call_fn)(under, args)
 	}
 }

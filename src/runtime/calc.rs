@@ -22,7 +22,7 @@ impl Calc {
 		Rc::new(v.into())
 	}
 
-	pub fn call(self: Rc<Self>, args: Queue) -> Funct {
+	pub fn call(self: Rc<Self>, _args: Rc<Queue>) -> Funct {
 		Funct::error("calc call stub")
 	}
 }

@@ -11,12 +11,12 @@ impl Text {
 		Rc::new(s.into())
 	}
 
-	pub fn call(&self, args: Queue) -> Funct {
+	pub fn call(&self, args: Rc<Queue>) -> Funct {
 		let mut s = self.0.clone();
-		for arg in args.0 {
+		for arg in &*args.0.borrow() {
 			match s.find('$') {
-				Some(offset) => s.replace_range(offset..(offset + 1), &arg.repr().0),
-				None => s.push_str(&format!("[extra {}]", arg.repr().0)),
+				Some(offset) => s.replace_range(offset..(offset + 1), &arg.clone().repr().0),
+				None => s.push_str(&format!("[extra {}]", arg.clone().repr().0)),
 			}
 			dbg!(&s);
 		}
